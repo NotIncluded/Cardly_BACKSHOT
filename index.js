@@ -32,6 +32,8 @@ app.use('/review', reviewRoutes); // /review/:record_id
 const ratingRoutes = require('./routes/rating');
 app.use('/ratings', ratingRoutes); // /ratings, /ratings/average/:id, /flashcards/top-rated
 
+const coverRoutes = require('./routes/cover');
+app.use('/cover', coverRoutes);
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

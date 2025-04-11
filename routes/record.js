@@ -4,15 +4,15 @@ const router = express.Router();
 
 // Create a new record
 router.post('/records', async (req, res) => {
-  const { user_id, title } = req.body;
+  const { user_id, category, status } = req.body;
 
-  if (!user_id || !title) {
-    return res.status(400).json({ error: 'user_id and title are required' });
+  if (!user_id || !category || !status) {
+    return res.status(400).json({ error: 'user_id, category, and status are required' });
   }
 
   const { data, error } = await supabase
     .from('Record')
-    .insert([{ User_ID: user_id, Title: title }])
+    .insert([{ User_ID: user_id, Category: category, Status: status }])
     .select()
     .single();
 
