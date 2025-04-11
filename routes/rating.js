@@ -2,37 +2,69 @@ const express = require('express');
 const { supabase } = require('../supabase/client');
 const router = express.Router();
 
-// Post a rating
+// Upsert a rating based on record_id (insert if new, update if exists)
 router.post('/ratings', async (req, res) => {
-  const { user_id, flashcard_id, value } = req.body;
+  const { user_id, record_id, value } = req.body;
 
-  if (!user_id || !flashcard_id || !value) {
-    return res.status(400).json({ error: 'user_id, flashcard_id, and value are required' });
+  if (!user_id || !record_id || !value) {
+    return res.status(400).json({ error: 'user_id, record_id, and value are required' });
   }
 
   if (value < 1 || value > 5) {
     return res.status(400).json({ error: 'Rating must be between 1 and 5' });
   }
 
-  const { data, error } = await supabase
+  // Check if rating already exists for this record_id and user_id
+  const { data: existing, error: lookupError } = await supabase
     .from('Rating')
-    .insert([{ User_ID: user_id, Flashcard_ID: flashcard_id, Value: value }])
-    .select()
+    .select('*')
+    .eq('User_ID', user_id)
+    .eq('Record_ID', record_id)
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (lookupError && lookupError.code !== 'PGRST116') {
+    return res.status(500).json({ error: 'Database lookup failed' });
+  }
 
-  res.status(201).json({ message: 'Rating submitted', data });
+  let result;
+
+  if (existing) {
+    // Update existing rating for this record_id
+    const { data, error } = await supabase
+      .from('Rating')
+      .update({ Value: value })
+      .eq('User_ID', user_id)
+      .eq('Record_ID', record_id)
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    result = { message: 'Rating updated successfully', data };
+  } else {
+    // Insert new rating for this record_id
+    const { data, error } = await supabase
+      .from('Rating')
+      .insert([{ User_ID: user_id, Record_ID: record_id, Value: value }])
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    result = { message: 'Rating submitted successfully', data };
+  }
+
+  res.status(200).json(result);
 });
 
-// Get average rating of a flashcard
-router.get('/ratings/average/:flashcard_id', async (req, res) => {
-  const { flashcard_id } = req.params;
+// Get average rating of a record_id
+router.get('/ratings/average/:record_id', async (req, res) => {
+  const { record_id } = req.params;
 
   const { data, error } = await supabase
     .from('Rating')
     .select('Value')
-    .eq('Flashcard_ID', flashcard_id);
+    .eq('Record_ID', record_id);
 
   if (error) return res.status(500).json({ error: error.message });
 
@@ -42,7 +74,7 @@ router.get('/ratings/average/:flashcard_id', async (req, res) => {
     : null;
 
   res.status(200).json({
-    flashcard_id,
+    record_id,
     average_rating: average ? average.toFixed(2) : 'No ratings yet',
     count: values.length
   });

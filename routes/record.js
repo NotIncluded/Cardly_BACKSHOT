@@ -10,6 +10,11 @@ router.post('/records', async (req, res) => {
     return res.status(400).json({ error: 'user_id, category, and status are required' });
   }
 
+  const allowedStatuses = ['Private', 'Public'];
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({ error: 'Status must be either "Private" or "Public"' });
+  }
+
   const { data, error } = await supabase
     .from('Record')
     .insert([{ User_ID: user_id, Category: category, Status: status }])
@@ -30,7 +35,7 @@ router.get('/records/:user_id', async (req, res) => {
     .select('*')
     .eq('User_ID', user_id);
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(500).json({ records: data });
 
   res.status(200).json({ records: data });
 });
