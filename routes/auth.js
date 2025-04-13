@@ -1,27 +1,13 @@
-// routes/auth.js
-
 const express = require('express');
 const bcrypt = require('bcrypt');
-const { supabase } = require('../supabase/client');
-const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const nodemailer = require('nodemailer');
+const { supabase } = require('../supabase/client');
+const { Resend } = require('resend');
+const router = express.Router();
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.office365.com',
-  port: 587, // Use port 587 for STARTTLS
-  secure: false, // Use TLS
-  auth: {
-    user: 'ait98763@gmail.com', // Your Microsoft 365 email address
-    pass: 'qsfsplrfdqbryobd',     // The App password you created
-  },
-  tls: {
-    ciphers: 'SSLv3', // Some older systems might require this
-    rejectUnauthorized: false, // Only for development/testing, remove in production
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Register route with email verification
+// Register user with email verification
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -29,7 +15,7 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'Name, email, and password are required' });
   }
 
-  // Check if the email already exists
+  // Check if email already exists
   const { data: existingUser, error: lookupError } = await supabase
     .from('User')
     .select('*')
@@ -41,13 +27,12 @@ router.post('/register', async (req, res) => {
   }
 
   if (lookupError && lookupError.code !== 'PGRST116') {
-    return res.status(500).json({ error: 'Database error when checking email' });
+    return res.status(500).json({ error: 'Database error during lookup' });
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const verificationToken = uuidv4(); // Generate a unique verification token
+  const verificationToken = uuidv4();
 
-  // Insert the new user into the database with is_verified as false and the verification token
   const { data, error } = await supabase
     .from('User')
     .insert([{
@@ -55,37 +40,42 @@ router.post('/register', async (req, res) => {
       Email: email,
       Password: hashedPassword,
       is_verified: false,
-      verification_token: verificationToken,
+      verification_token: verificationToken
     }])
     .select()
     .single();
 
   if (error) {
-    console.error('Insert Error:', error);
     return res.status(500).json({ error: error.message });
   }
 
-  // Send verification email
-  const verificationLink = `${req.headers.origin}/verify-email?token=${verificationToken}`; // Adjust the URL as needed
-  const mailOptions = {
-    from: 'your_email@example.com', // Use your configured email
+  // Build the verification link using your backend URL
+  const backendURL = process.env.BACKEND_URL || 'http://localhost:3000';
+  const verificationLink = `${backendURL}/auth/verify-email?token=${verificationToken}`;
+
+  // Send the verification email using Resend
+  const { error: emailError } = await resend.emails.send({
+    from: 'Reggin Team <onboarding@resend.dev>',
     to: email,
     subject: 'Verify Your Email Address',
-    html: `<p>Thank you for registering! Please click the following link to verify your email address:</p><p><a href="${verificationLink}">${verificationLink}</a></p>`,
-  };
-
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error('Error sending verification email:', error);
-      // Consider how you want to handle email sending failures (e.g., log, inform user).
-    } else {
-      console.log('Verification email sent:', info.response);
-    }
+    html: `
+      <h2>Welcome, ${name}!</h2>
+      <p>Please verify your email by clicking this link:</p>
+      <a href="${verificationLink}">${verificationLink}</a>
+      <p>This link will only work once.</p>
+    `
   });
 
-  res.status(201).json({ message: 'User registered successfully. Please check your email to verify your account.' });
+  if (emailError) {
+    console.error('Failed to send email:', emailError);
+  }
+
+  res.status(201).json({
+    message: 'User registered. Please check your email to verify your account.'
+  });
 });
 
+// Login route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -103,9 +93,8 @@ router.post('/login', async (req, res) => {
     return res.status(401).json({ error: 'Invalid email or password' });
   }
 
-  // Check if the user's email is verified
   if (!user.is_verified) {
-    return res.status(401).json({ error: 'Please verify your email address before logging in.' });
+    return res.status(401).json({ error: 'Please verify your email before logging in.' });
   }
 
   const validPassword = await bcrypt.compare(password, user.Password);
@@ -121,42 +110,42 @@ router.post('/login', async (req, res) => {
   });
 });
 
-// New route for verifying email
+// Email verification route
 router.get('/verify-email', async (req, res) => {
   const { token } = req.query;
 
   if (!token) {
-    return res.status(400).json({ error: 'Verification token is missing.' });
+    return res.status(400).json({ error: 'Missing verification token.' });
   }
 
-  const { data: user, error } = await supabase
+  // 1. Fetch user by token
+  const { data: user, error: lookupError } = await supabase
     .from('User')
     .select('*')
     .eq('verification_token', token)
     .single();
 
-  if (error) {
-    console.error('Error looking up user by token:', error);
-    return res.status(500).json({ error: 'Internal server error.' });
+  console.log('User from DB:', user);
+
+  if (lookupError || !user) {
+    return res.status(400).json({ error: 'Invalid or expired verification token.' });
   }
 
-  if (!user) {
-    return res.status(400).json({ error: 'Invalid verification token.' });
-  }
-
-  // Update user to set is_verified to true and clear the verification token
+  // 2. Update row - verifying the exact column name is 'User_ID'
   const { error: updateError } = await supabase
     .from('User')
-    .update({ is_verified: true, verification_token: null })
-    .eq('id', user.id); // Assuming your User table has an 'id' primary key
+    .update({
+      is_verified: true,
+      verification_token: null
+    })
+    .eq('User_ID', user.User_ID);
 
   if (updateError) {
-    console.error('Error updating user verification status:', updateError);
     return res.status(500).json({ error: 'Failed to verify email.' });
   }
 
-  res.status(200).json({ message: 'Email verified successfully! You can now log in.' });
-  // You might want to redirect the user to a login page on your frontend here: res.redirect('/login');
+  return res.status(200).json({ message: 'Email verified successfully! You can now log in.' });
 });
+
 
 module.exports = router;
