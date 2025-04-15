@@ -4,6 +4,11 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
+// Swagger setup
+const { swaggerUi, specs } = require('./swagger');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -38,4 +43,5 @@ app.use('/cover', coverRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Swagger docs at http://localhost:${PORT}/api-docs`);
 });
