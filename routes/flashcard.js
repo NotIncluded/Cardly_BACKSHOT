@@ -28,6 +28,28 @@ const router = express.Router();
  *         description: Invalid input
  */
 
+// Mock data store (replace with DB logic in real case)
+let flashcards = [];
+let idCounter = 1;
+
+/**
+ * @swagger
+ * tags:
+ *   name: Flashcards
+ *   description: Flashcard management
+ */
+
+/**
+ * @swagger
+ * /flashcards:
+ *   get:
+ *     summary: Get all flashcards
+ *     tags: [Flashcards]
+ *     responses:
+ *       200:
+ *         description: A list of flashcards
+ */
+
 // Get flashcards with search and filter options
 router.get('/flashcards', async (req, res) => {
     const { record_id, query } = req.query;
@@ -53,6 +75,29 @@ router.get('/flashcards', async (req, res) => {
     res.status(200).json({ flashcards: data });
 });
 
+/**
+ * @swagger
+ * /flashcards:
+ *   post:
+ *     summary: Create a new flashcard
+ *     tags: [Flashcards]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [question, answer]
+ *             properties:
+ *               question:
+ *                 type: string
+ *               answer:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Flashcard created
+ */
+
 // Create a flashcard (remains the same)
 router.post('/flashcards', async (req, res) => {
     const { record_id, question, answer, hint } = req.body;
@@ -75,6 +120,37 @@ router.post('/flashcards', async (req, res) => {
 // Get all flashcards for a record (you might not need this separate route anymore)
 // router.get('/flashcards/:record_id', async (req, res) => { ... });
 
+/**
+ * @swagger
+ * /flashcards/{id}:
+ *   put:
+ *     summary: Update a flashcard
+ *     tags: [Flashcards]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Flashcard ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               question:
+ *                 type: string
+ *               answer:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Flashcard updated
+ *       404:
+ *         description: Flashcard not found
+ */
+
 // Update a flashcard (remains the same)
 router.put('/flashcards/:flashcard_num', async (req, res) => {
     const { flashcard_num } = req.params;
@@ -91,6 +167,27 @@ router.put('/flashcards/:flashcard_num', async (req, res) => {
 
     res.status(200).json({ message: 'Flashcard updated', data });
 });
+
+
+/**
+ * @swagger
+ * /flashcards/{id}:
+ *   delete:
+ *     summary: Delete a flashcard
+ *     tags: [Flashcards]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Flashcard ID
+ *     responses:
+ *       204:
+ *         description: Flashcard deleted
+ *       404:
+ *         description: Flashcard not found
+ */
 
 // Delete a flashcard (remains the same)
 router.delete('/flashcards/:flashcard_num', async (req, res) => {
