@@ -14,9 +14,6 @@ app.get('/', (req, res) => {
 });
 
 // Mount each route group under its own path
-const authRoutes = require('./routes/auth');
-app.use('/auth', authRoutes); // /auth/login, /auth/register
-
 const recordRoutes = require('./routes/record');
 app.use('/records', recordRoutes); // /records
 
@@ -34,7 +31,7 @@ app.use('/ratings', ratingRoutes); // /ratings, /ratings/average/:id, /flashcard
 
 const coverRoutes = require('./routes/cover');
 app.use('/cover', coverRoutes);
-// Start the server
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
