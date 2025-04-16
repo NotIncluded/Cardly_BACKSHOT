@@ -27,6 +27,21 @@ router.get('/cover', async (req, res) => {
   res.status(200).json({ data });
 });
 
+// Get all covers by a specific user
+router.get('/cover/user/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+
+  const { data, error } = await supabase
+    .from('Cover')
+    .select('*')
+    .eq('User_ID', user_id);
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.status(200).json({ data });
+});
+
+
 // Create a new cover (remains the same)
 router.post('/cover', async (req, res) => {
   const { record_id, title, description } = req.body;

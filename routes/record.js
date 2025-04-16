@@ -40,6 +40,70 @@ router.get('/records/:user_id', async (req, res) => {
   res.status(200).json({ records: data });
 });
 
+// Create a Record, Cover, and Flashcards
+router.post('/records/full/:user_id', async (req, res) => {
+  const { status, category, title, description, questions } = req.body;
+  const { user_id } = req.params;
+
+  // Ensure required fields are provided
+  if (!status || !category || !title || !description || !questions || !Array.isArray(questions)) {
+    return res.status(400).json({ error: 'Status, category, title, description, and questions array are required' });
+  }
+
+  // Start a transaction to ensure both the Record, Cover, and Flashcards are created together
+  const { data: recordData, error: recordError } = await supabase
+    .from('Record')
+    .insert([{ Status: status, Category: category, User_ID: user_id }])
+    .select()
+    .single();
+
+  if (recordError) {
+    console.error('Error creating record:', recordError);
+    return res.status(500).json({ error: recordError.message });
+  }
+
+  // Create the Cover associated with the Record
+  const { data: coverData, error: coverError } = await supabase
+    .from('Cover')
+    .insert([{ Record_ID: recordData.Record_ID, Title: title, Description: description }])
+    .select()
+    .single();
+
+  if (coverError) {
+    console.error('Error creating cover:', coverError);
+    return res.status(500).json({ error: coverError.message });
+  }
+
+  // Create flashcards for each question, all linked to the same Record_ID
+  const flashcardsData = questions.map((question) => ({
+    Record_ID: recordData.Record_ID,
+    Question: question.question,
+    Answer: question.answer,
+    Hint: question.hint,
+  }));
+ //fassfsaf
+
+  // Insert all flashcards at once
+  const { data: flashcardData, error: flashcardError } = await supabase
+    .from('Flashcard')
+    .insert(flashcardsData) // Insert an array of flashcards
+    .select();
+
+  if (flashcardError) {
+    console.error('Error creating flashcards:', flashcardError);
+    return res.status(500).json({ error: flashcardError.message });
+  }
+
+  // Respond with the created record, cover, and flashcards
+  res.status(201).json({
+    message: 'Record, Cover, and Flashcards created successfully',
+    record: recordData,
+    cover: coverData,
+    flashcards: flashcardData,
+  });
+});
+
+
 // Delete a record
 router.delete('/records/:record_id', async (req, res) => {
   const { record_id } = req.params;

@@ -57,6 +57,23 @@ router.post('/ratings', async (req, res) => {
   res.status(200).json(result);
 });
 
+router.delete('/ratings', async (req, res) => {
+  const { user_id, record_id } = req.body;
+
+  if (!user_id || !record_id) {
+    return res.status(400).json({ error: 'user_id and record_id are required' });
+  }
+
+  const { error } = await supabase
+    .from('Rating')
+    .delete()
+    .match({ User_ID: user_id, Record_ID: record_id });
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.status(200).json({ message: 'Rating deleted successfully' });
+});
+
 // Get average rating of a record_id
 router.get('/ratings/average/:record_id', async (req, res) => {
   const { record_id } = req.params;
