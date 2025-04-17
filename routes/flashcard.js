@@ -4,36 +4,6 @@ const router = express.Router();
 
 /**
  * @swagger
- * /auth/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       201:
- *         description: User registered successfully
- *       400:
- *         description: Invalid input
- */
-
-// Mock data store (replace with DB logic in real case)
-let flashcards = [];
-let idCounter = 1;
-
-/**
- * @swagger
  * tags:
  *   name: Flashcards
  *   description: Flashcard management
@@ -41,7 +11,7 @@ let idCounter = 1;
 
 /**
  * @swagger
- * /flashcards:
+ * /flashcards/flashcards:
  *   get:
  *     summary: Get all flashcards
  *     tags: [Flashcards]
@@ -77,7 +47,7 @@ router.get('/flashcards', async (req, res) => {
 
 /**
  * @swagger
- * /flashcards:
+ * /flashcards/flashcards:
  *   post:
  *     summary: Create a new flashcard
  *     tags: [Flashcards]
@@ -87,16 +57,27 @@ router.get('/flashcards', async (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
- *             required: [question, answer]
+ *             required: [record_id, question, answer]
  *             properties:
+ *               record_id:
+ *                 type: string
+ *                 description: ID of the related record
  *               question:
  *                 type: string
  *               answer:
  *                 type: string
+ *               hint:
+ *                 type: string
+ *                 nullable: true
  *     responses:
  *       201:
- *         description: Flashcard created
+ *         description: Flashcard created successfully
+ *       400:
+ *         description: Missing required fields
+ *       500:
+ *         description: Server error
  */
+
 
 // Create a flashcard (remains the same)
 router.post('/flashcards', async (req, res) => {
@@ -122,15 +103,15 @@ router.post('/flashcards', async (req, res) => {
 
 /**
  * @swagger
- * /flashcards/{id}:
+ * /flashcards/flashcards/{flashcard_num}:
  *   put:
  *     summary: Update a flashcard
  *     tags: [Flashcards]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: flashcard_num
  *         schema:
- *           type: integer
+ *           type: string
  *         required: true
  *         description: Flashcard ID
  *     requestBody:
@@ -147,8 +128,6 @@ router.post('/flashcards', async (req, res) => {
  *     responses:
  *       200:
  *         description: Flashcard updated
- *       404:
- *         description: Flashcard not found
  */
 
 // Update a flashcard (remains the same)
@@ -171,22 +150,20 @@ router.put('/flashcards/:flashcard_num', async (req, res) => {
 
 /**
  * @swagger
- * /flashcards/{id}:
+ * /flashcards/flashcards/{flashcard_num}:
  *   delete:
  *     summary: Delete a flashcard
  *     tags: [Flashcards]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: flashcard_num
  *         schema:
- *           type: integer
+ *           type: string
  *         required: true
  *         description: Flashcard ID
  *     responses:
  *       204:
  *         description: Flashcard deleted
- *       404:
- *         description: Flashcard not found
  */
 
 // Delete a flashcard (remains the same)

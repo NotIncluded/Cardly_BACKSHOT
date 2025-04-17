@@ -4,28 +4,25 @@ const router = express.Router();
 
 /**
  * @swagger
- * /auth/register:
+ * /bookmarks/bookmarks:
  *   post:
- *     summary: Register a new user
- *     tags: [Auth]
+ *     summary: Add a new bookmark
+ *     tags: [Bookmark]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [cover_id, user_id]
  *             properties:
- *               username:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
+ *               cover_id:
+ *                 type: integer
+ *               user_id:
  *                 type: string
  *     responses:
  *       201:
- *         description: User registered successfully
- *       400:
- *         description: Invalid input
+ *         description: Bookmark added
  */
 
 // Bookmark a cover
@@ -46,6 +43,23 @@ router.post('/bookmarks', async (req, res) => {
 
   res.status(201).json({ message: 'Cover bookmarked', data });
 });
+
+/**
+ * @swagger
+ * /bookmarks/bookmarks/{user_id}:
+ *   get:
+ *     summary: Get all bookmarks for a user
+ *     tags: [Bookmark]
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of bookmarks
+ */
 
 // Get all bookmarks for a user
 router.get('/bookmarks/:user_id', async (req, res) => {

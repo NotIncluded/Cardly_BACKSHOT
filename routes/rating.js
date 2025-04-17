@@ -4,29 +4,46 @@ const router = express.Router();
 
 /**
  * @swagger
- * /auth/register:
+ * tags:
+ *   name: Rating
+ *   description: Flashcard ratings
+ */
+
+/**
+ * @swagger
+ * /ratings/ratings:
  *   post:
- *     summary: Register a new user
- *     tags: [Auth]
+ *     summary: Rate a record (insert or update)
+ *     tags: [Rating]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [user_id, record_id, value]
  *             properties:
- *               username:
+ *               user_id:
  *                 type: string
- *               email:
+ *                 description: ID of the user submitting the rating
+ *               record_id:
  *                 type: string
- *               password:
- *                 type: string
+ *                 description: ID of the record being rated
+ *               value:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 description: Rating value between 1 and 5
  *     responses:
- *       201:
- *         description: User registered successfully
+ *       200:
+ *         description: Rating submitted or updated successfully
  *       400:
- *         description: Invalid input
+ *         description: Invalid input (e.g. missing fields or invalid value)
+ *       500:
+ *         description: Server or database error
  */
+
+
 
 // Upsert a rating based on record_id (insert if new, update if exists)
 router.post('/ratings', async (req, res) => {
@@ -82,6 +99,24 @@ router.post('/ratings', async (req, res) => {
 
   res.status(200).json(result);
 });
+
+/**
+ * @swagger
+ * /ratings/ratings/average/{record_id}:
+ *   get:
+ *     summary: Get average rating for a flashcard
+ *     tags: [Rating]
+ *     parameters:
+ *       - in: path
+ *         name: record_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Flashcard ID
+ *     responses:
+ *       200:
+ *         description: Average rating
+ */
 
 // Get average rating of a record_id
 router.get('/ratings/average/:record_id', async (req, res) => {

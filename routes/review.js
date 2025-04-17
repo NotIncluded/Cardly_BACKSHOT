@@ -4,28 +4,19 @@ const router = express.Router();
 
 /**
  * @swagger
- * /auth/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
+ * /review/review/{record_id}:
+ *   get:
+ *     summary: Get reviews by record ID
+ *     tags: [Review]
+ *     parameters:
+ *       - in: path
+ *         name: record_id
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
- *       201:
- *         description: User registered successfully
- *       400:
- *         description: Invalid input
+ *       200:
+ *         description: Reviews retrieved
  */
 
 // GET flashcards for review from a specific record

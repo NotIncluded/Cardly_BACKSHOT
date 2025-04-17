@@ -4,28 +4,34 @@ const router = express.Router();
 
 /**
  * @swagger
- * /auth/register:
+ * tags:
+ *   name: Record
+ *   description: Record management
+ */
+
+/**
+ * @swagger
+ * /records/records:
  *   post:
- *     summary: Register a new user
- *     tags: [Auth]
+ *     summary: Create a new record
+ *     tags: [Record]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [user_id, category, status]
  *             properties:
- *               username:
+ *               user_id:
  *                 type: string
- *               email:
+ *               category:
  *                 type: string
- *               password:
+ *               status:
  *                 type: string
  *     responses:
  *       201:
- *         description: User registered successfully
- *       400:
- *         description: Invalid input
+ *         description: Record created successfully
  */
 
 // Create a new record
@@ -52,6 +58,26 @@ router.post('/records', async (req, res) => {
   res.status(201).json({ message: 'Record created successfully', data });
 });
 
+/**
+ * @swagger
+ * /records/records/{user_id}:
+ *   get:
+ *     summary: Get all records
+ *     tags: [Record]
+ *     parameters:
+ *      - in: path
+ *        name: user_id
+ *        schema:
+ *          type: string
+ *        required: true
+ *        description: User ID
+ *     responses:
+ *       200:
+ *         description: List of records
+ *       500:
+ *         description: Server error
+ */
+
 // Get all records for a user
 router.get('/records/:user_id', async (req, res) => {
   const { user_id } = req.params;
@@ -65,6 +91,26 @@ router.get('/records/:user_id', async (req, res) => {
 
   res.status(200).json({ records: data });
 });
+
+/**
+ * @swagger
+ * /records/records/{record_id}:
+ *   delete:
+ *     summary: Delete a record
+ *     tags: [Record]
+ *     parameters:
+ *       - in: path
+ *         name: record_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Record ID
+ *     responses:
+ *       200:
+ *         description: Record deleted
+ *       500:
+ *         description: Server error
+ */
 
 // Delete a record
 router.delete('/records/:record_id', async (req, res) => {

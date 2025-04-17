@@ -4,28 +4,20 @@ const router = express.Router();
 
 /**
  * @swagger
- * /auth/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
+ * tags:
+ *   name: Cover
+ *   description: Cover resource management
+ */
+
+/**
+ * @swagger
+ * /cover/cover:
+ *   get:
+ *     summary: Get all covers
+ *     tags: [Cover]
  *     responses:
- *       201:
- *         description: User registered successfully
- *       400:
- *         description: Invalid input
+ *       200:
+ *         description: List of covers
  */
 
 // Get covers with optional filter by record_id and search by title
@@ -53,6 +45,31 @@ router.get('/cover', async (req, res) => {
   res.status(200).json({ data });
 });
 
+/**
+ * @swagger
+ * /cover/cover:
+ *   post:
+ *     summary: Create a new cover
+ *     tags: [Cover]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [record_id, title]
+ *             properties:
+ *               record_id:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Cover created successfully
+ */
+
 // Create a new cover (remains the same)
 router.post('/cover', async (req, res) => {
   const { record_id, title, description } = req.body;
@@ -75,6 +92,35 @@ router.post('/cover', async (req, res) => {
 // Get a cover by record ID (you might not need this separate route anymore)
 // router.get('/cover/:record_id', async (req, res) => { ... });
 
+/**
+ * @swagger
+ * /cover/cover/{record_id}:
+ *   put:
+ *     summary: Update a cover
+ *     tags: [Cover]
+ *     parameters:
+ *       - in: path
+ *         name: record_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Cover ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Cover updated successfully
+ */
+
 // Update a cover by record ID (remains the same)
 router.put('/cover/:record_id', async (req, res) => {
   const { record_id } = req.params;
@@ -91,6 +137,24 @@ router.put('/cover/:record_id', async (req, res) => {
 
   res.status(200).json({ message: 'Cover updated successfully', data });
 });
+
+/**
+ * @swagger
+ * /cover/cover/{record_id}:
+ *   delete:
+ *     summary: Delete a cover
+ *     tags: [Cover]
+ *     parameters:
+ *       - in: path
+ *         name: record_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Cover ID
+ *     responses:
+ *       200:
+ *         description: Cover deleted successfully
+ */
 
 // Optional: Delete a cover by record ID (remains the same)
 router.delete('/cover/:record_id', async (req, res) => {

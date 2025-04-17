@@ -9,9 +9,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
  * @swagger
- * /auth/login:
+ * /auth/register:
  *   post:
- *     summary: Log in a user
+ *     summary: Register a new user
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -20,15 +20,17 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  *           schema:
  *             type: object
  *             properties:
+ *               name:
+ *                 type: string
  *               email:
  *                 type: string
  *               password:
  *                 type: string
  *     responses:
- *       200:
- *         description: Login successful
- *       401:
- *         description: Invalid credentials
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Invalid input
  */
 
 // Register user with email verification
@@ -98,6 +100,30 @@ router.post('/register', async (req, res) => {
     message: 'User registered. Please check your email to verify your account.'
   });
 });
+
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Log in a user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
+ */
 
 // Login route
 router.post('/login', async (req, res) => {
