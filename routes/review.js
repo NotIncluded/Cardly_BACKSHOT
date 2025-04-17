@@ -2,6 +2,23 @@ const express = require('express');
 const { supabase } = require('../supabase/client');
 const router = express.Router();
 
+/**
+ * @swagger
+ * /review/review/{record_id}:
+ *   get:
+ *     summary: Get reviews by record ID
+ *     tags: [Review]
+ *     parameters:
+ *       - in: path
+ *         name: record_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Reviews retrieved
+ */
+
 // GET flashcards for review from a specific record
 router.get('/review/:record_id', async (req, res) => {
   const { record_id } = req.params;

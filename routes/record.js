@@ -2,6 +2,38 @@ const express = require('express');
 const { supabase } = require('../supabase/client');
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   name: Record
+ *   description: Record management
+ */
+
+/**
+ * @swagger
+ * /records/records:
+ *   post:
+ *     summary: Create a new record
+ *     tags: [Record]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [user_id, category, status]
+ *             properties:
+ *               user_id:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Record created successfully
+ */
+
 // Create a new record
 router.post('/records', async (req, res) => {
   const { user_id, category, status } = req.body;
@@ -26,6 +58,26 @@ router.post('/records', async (req, res) => {
   res.status(201).json({ message: 'Record created successfully', data });
 });
 
+/**
+ * @swagger
+ * /records/records/{user_id}:
+ *   get:
+ *     summary: Get all records
+ *     tags: [Record]
+ *     parameters:
+ *      - in: path
+ *        name: user_id
+ *        schema:
+ *          type: string
+ *        required: true
+ *        description: User ID
+ *     responses:
+ *       200:
+ *         description: List of records
+ *       500:
+ *         description: Server error
+ */
+
 // Get all records for a user
 router.get('/records/:user_id', async (req, res) => {
   const { user_id } = req.params;
@@ -39,6 +91,93 @@ router.get('/records/:user_id', async (req, res) => {
 
   res.status(200).json({ records: data });
 });
+
+/**
+ * @swagger
+ * /records/records/full/{user_id}:
+ *   post:
+ *     summary: Create a new Record with Cover and Flashcards
+ *     tags: [Record]
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the user creating the record
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *               - category
+ *               - title
+ *               - description
+ *               - questions
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [Private, Public]
+ *               category:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *                 description: Title for the cover
+ *               description:
+ *                 type: string
+ *                 description: Description for the cover
+ *               questions:
+ *                 type: array
+ *                 description: Array of flashcard objects
+ *                 items:
+ *                   type: object
+ *                   required: [question, answer]
+ *                   properties:
+ *                     question:
+ *                       type: string
+ *                     answer:
+ *                       type: string
+ *                     hint:
+ *                       type: string
+ *           example:
+ *             status: Public
+ *             category: Math
+ *             title: Basic Addition
+ *             description: A set of flashcards to practice simple addition
+ *             questions:
+ *               - question: What is 1 + 1?
+ *                 answer: 2
+ *                 hint: It's the first even number
+ *               - question: What is 2 + 3?
+ *                 answer: 5
+ *                 hint: Think of counting fingers
+ *     responses:
+ *       201:
+ *         description: Record, Cover, and Flashcards created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Record, Cover, and Flashcards created successfully
+ *                 record:
+ *                   type: object
+ *                 cover:
+ *                   type: object
+ *                 flashcards:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       400:
+ *         description: Missing or invalid request body fields
+ *       500:
+ *         description: Server error while creating record, cover, or flashcards
+ */
 
 // Create a Record, Cover, and Flashcards
 router.post('/records/full/:user_id', async (req, res) => {
@@ -103,6 +242,25 @@ router.post('/records/full/:user_id', async (req, res) => {
   });
 });
 
+/**
+ * @swagger
+ * /records/records/{record_id}:
+ *   delete:
+ *     summary: Delete a record
+ *     tags: [Record]
+ *     parameters:
+ *       - in: path
+ *         name: record_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Record ID
+ *     responses:
+ *       200:
+ *         description: Record deleted
+ *       500:
+ *         description: Server error
+ */
 
 // Delete a record
 router.delete('/records/:record_id', async (req, res) => {
