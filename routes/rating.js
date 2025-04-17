@@ -102,6 +102,50 @@ router.post('/ratings', async (req, res) => {
 
 /**
  * @swagger
+ * /ratings/ratings:
+ *  delete:
+ *    summary: Delete a rating
+ *    tags: [Rating]
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            required: [user_id, record_id]
+ *            properties:
+ *              user_id:
+ *                type: string
+ *              record_id:
+ *                type: string
+ *    responses:
+ *      200:
+ *        description: Rating deleted successfully
+ *      400:
+ *        description: user_id and record_id are required
+ *      500:
+ *        description: Server or database error
+ */
+
+router.delete('/ratings', async (req, res) => {
+  const { user_id, record_id } = req.body;
+
+  if (!user_id || !record_id) {
+    return res.status(400).json({ error: 'user_id and record_id are required' });
+  }
+
+  const { error } = await supabase
+    .from('Rating')
+    .delete()
+    .match({ User_ID: user_id, Record_ID: record_id });
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.status(200).json({ message: 'Rating deleted successfully' });
+});
+
+/**
+ * @swagger
  * /ratings/ratings/average/{record_id}:
  *   get:
  *     summary: Get average rating for a flashcard

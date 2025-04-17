@@ -94,6 +94,157 @@ router.get('/records/:user_id', async (req, res) => {
 
 /**
  * @swagger
+ * /records/records/full/{user_id}:
+ *   post:
+ *     summary: Create a new Record with Cover and Flashcards
+ *     tags: [Record]
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the user creating the record
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *               - category
+ *               - title
+ *               - description
+ *               - questions
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [Private, Public]
+ *               category:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *                 description: Title for the cover
+ *               description:
+ *                 type: string
+ *                 description: Description for the cover
+ *               questions:
+ *                 type: array
+ *                 description: Array of flashcard objects
+ *                 items:
+ *                   type: object
+ *                   required: [question, answer]
+ *                   properties:
+ *                     question:
+ *                       type: string
+ *                     answer:
+ *                       type: string
+ *                     hint:
+ *                       type: string
+ *           example:
+ *             status: Public
+ *             category: Math
+ *             title: Basic Addition
+ *             description: A set of flashcards to practice simple addition
+ *             questions:
+ *               - question: What is 1 + 1?
+ *                 answer: 2
+ *                 hint: It's the first even number
+ *               - question: What is 2 + 3?
+ *                 answer: 5
+ *                 hint: Think of counting fingers
+ *     responses:
+ *       201:
+ *         description: Record, Cover, and Flashcards created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Record, Cover, and Flashcards created successfully
+ *                 record:
+ *                   type: object
+ *                 cover:
+ *                   type: object
+ *                 flashcards:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       400:
+ *         description: Missing or invalid request body fields
+ *       500:
+ *         description: Server error while creating record, cover, or flashcards
+ */
+
+
+// Create a Record, Cover, and Flashcards
+router.post('/records/full/:user_id', async (req, res) => {
+  const { status, category, title, description, questions } = req.body;
+  const { user_id } = req.params;
+
+  // Ensure required fields are provided
+  if (!status || !category || !title || !description || !questions || !Array.isArray(questions)) {
+    return res.status(400).json({ error: 'Status, category, title, description, and questions array are required' });
+  }
+
+  // Start a transaction to ensure both the Record, Cover, and Flashcards are created together
+  const { data: recordData, error: recordError } = await supabase
+    .from('Record')
+    .insert([{ Status: status, Category: category, User_ID: user_id }])
+    .select()
+    .single();
+
+  if (recordError) {
+    console.error('Error creating record:', recordError);
+    return res.status(500).json({ error: recordError.message });
+  }
+
+  // Create the Cover associated with the Record
+  const { data: coverData, error: coverError } = await supabase
+    .from('Cover')
+    .insert([{ Record_ID: recordData.Record_ID, Title: title, Description: description }])
+    .select()
+    .single();
+
+  if (coverError) {
+    console.error('Error creating cover:', coverError);
+    return res.status(500).json({ error: coverError.message });
+  }
+
+  // Create flashcards for each question, all linked to the same Record_ID
+  const flashcardsData = questions.map((question) => ({
+    Record_ID: recordData.Record_ID,
+    Question: question.question,
+    Answer: question.answer,
+    Hint: question.hint,
+  }));
+ //fassfsaf
+
+  // Insert all flashcards at once
+  const { data: flashcardData, error: flashcardError } = await supabase
+    .from('Flashcard')
+    .insert(flashcardsData) // Insert an array of flashcards
+    .select();
+
+  if (flashcardError) {
+    console.error('Error creating flashcards:', flashcardError);
+    return res.status(500).json({ error: flashcardError.message });
+  }
+
+  // Respond with the created record, cover, and flashcards
+  res.status(201).json({
+    message: 'Record, Cover, and Flashcards created successfully',
+    record: recordData,
+    cover: coverData,
+    flashcards: flashcardData,
+  });
+});
+
+/**
+ * @swagger
  * /records/records/{record_id}:
  *   delete:
  *     summary: Delete a record

@@ -46,6 +46,52 @@ router.post('/bookmarks', async (req, res) => {
 
 /**
  * @swagger
+ * /bookmarks/bookmarks:
+ *   delete:
+ *     summary: Remove a bookmark
+ *     tags: [Bookmark]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [cover_id, user_id]
+ *             properties:
+ *               cover_id:
+ *                 type: string
+ *               user_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Bookmark deleted successfully
+ */
+
+// Delete a bookmark
+router.delete('/bookmarks', async (req, res) => {
+  const { user_id, cover_id } = req.body;
+
+  if (!user_id || !cover_id) {
+    return res.status(400).json({ error: 'user_id and cover_id are required' });
+  }
+
+  const { data, error } = await supabase
+    .from('Bookmark')
+    .delete()
+    .match({ User_ID: user_id, Cover_ID: cover_id })
+    .select(); // Required to check if anything was deleted
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  if (!data || data.length === 0) {
+    return res.status(404).json({ error: 'Bookmark not found' });
+  }
+
+  res.status(200).json({ message: 'Bookmark deleted successfully' });
+});
+
+/**
+ * @swagger
  * /bookmarks/bookmarks/{user_id}:
  *   get:
  *     summary: Get all bookmarks for a user
