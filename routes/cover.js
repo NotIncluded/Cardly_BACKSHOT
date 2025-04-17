@@ -9,32 +9,6 @@ const router = express.Router();
  *   description: Cover resource management
  */
 
-/**
- * @swagger
- * /cover/cover:
- *   get:
- *     summary: Get covers with optional filter by record_id and search by title
- *     tags: [Cover]
- *     parameters:
- *       - in: query
- *         name: record_id
- *         schema:
- *           type: string
- *         required: false
- *         description: Filter covers by Record_ID
- *       - in: query
- *         name: query
- *         schema:
- *           type: string
- *         required: false
- *         description: Search covers by title (case-insensitive)
- *     responses:
- *       200:
- *         description: A list of covers
- *       500:
- *         description: Search/Filter error:
- */
-
 // Get covers with optional filter by record_id and search by title
 router.get('/cover', async (req, res) => {
   const { record_id, query } = req.query;
@@ -59,24 +33,6 @@ router.get('/cover', async (req, res) => {
 
   res.status(200).json({ data });
 });
-
-/**
- * @swagger
- * /cover/cover/user/{user_id}:
- *   get:
- *     summary: Get all covers by a specific user
- *     tags: [Cover]
- *    parameters:
- *      - in: path
- *       name: user_id
- *      required: true
- *      schema:
- *        type: string
- *     description: User ID
- *     responses:
- *      200:
- *        description: List of covers by user
- */
 
 // Get all covers by a specific user
 router.get('/cover/user/:user_id', async (req, res) => {
@@ -184,6 +140,24 @@ router.put('/cover/:record_id', async (req, res) => {
 
   res.status(200).json({ message: 'Cover updated successfully', data });
 });
+
+/**
+ * @swagger
+ * /cover/cover/{record_id}:
+ *   delete:
+ *     summary: Delete a cover
+ *     tags: [Cover]
+ *     parameters:
+ *       - in: path
+ *         name: record_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Cover ID
+ *     responses:
+ *       200:
+ *         description: Cover deleted successfully
+ */
 
 // Optional: Delete a cover by record ID (remains the same)
 router.delete('/cover/:record_id', async (req, res) => {

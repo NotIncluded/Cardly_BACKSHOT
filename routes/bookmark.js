@@ -17,7 +17,7 @@ const router = express.Router();
  *             required: [cover_id, user_id]
  *             properties:
  *               cover_id:
- *                 type: integer
+ *                 type: string
  *               user_id:
  *                 type: string
  *     responses:
