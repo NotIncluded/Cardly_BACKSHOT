@@ -2,6 +2,47 @@ const express = require('express');
 const { supabase } = require('../supabase/client');
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   name: Rating
+ *   description: Flashcard ratings
+ */
+
+/**
+ * @swagger
+ * /ratings/ratings:
+ *   post:
+ *     summary: Rate a record (insert or update)
+ *     tags: [Rating]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [user_id, record_id, value]
+ *             properties:
+ *               user_id:
+ *                 type: string
+ *                 description: ID of the user submitting the rating
+ *               record_id:
+ *                 type: string
+ *                 description: ID of the record being rated
+ *               value:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 description: Rating value between 1 and 5
+ *     responses:
+ *       200:
+ *         description: Rating submitted or updated successfully
+ *       400:
+ *         description: Invalid input (e.g. missing fields or invalid value)
+ *       500:
+ *         description: Server or database error
+ */
+
 // Upsert a rating based on record_id (insert if new, update if exists)
 router.post('/ratings', async (req, res) => {
   const { user_id, record_id, value } = req.body;
@@ -57,6 +98,33 @@ router.post('/ratings', async (req, res) => {
   res.status(200).json(result);
 });
 
+/**
+ * @swagger
+ * /ratings/ratings:
+ *  delete:
+ *    summary: Delete a rating
+ *    tags: [Rating]
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            required: [user_id, record_id]
+ *            properties:
+ *              user_id:
+ *                type: string
+ *              record_id:
+ *                type: string
+ *    responses:
+ *      200:
+ *        description: Rating deleted successfully
+ *      400:
+ *        description: user_id and record_id are required
+ *      500:
+ *        description: Server or database error
+ */
+
 router.delete('/ratings', async (req, res) => {
   const { user_id, record_id } = req.body;
 
@@ -73,6 +141,24 @@ router.delete('/ratings', async (req, res) => {
 
   res.status(200).json({ message: 'Rating deleted successfully' });
 });
+
+/**
+ * @swagger
+ * /ratings/ratings/average/{record_id}:
+ *   get:
+ *     summary: Get average rating for a flashcard
+ *     tags: [Rating]
+ *     parameters:
+ *       - in: path
+ *         name: record_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Flashcard ID
+ *     responses:
+ *       200:
+ *         description: Average rating
+ */
 
 // Get average rating of a record_id
 router.get('/ratings/average/:record_id', async (req, res) => {

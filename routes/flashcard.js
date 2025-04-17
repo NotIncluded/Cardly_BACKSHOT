@@ -2,6 +2,24 @@ const express = require('express');
 const { supabase } = require('../supabase/client');
 const router = express.Router();
 
+/**
+ * @swagger
+ * tags:
+ *   name: Flashcards
+ *   description: Flashcard management
+ */
+
+/**
+ * @swagger
+ * /flashcards/flashcards:
+ *   get:
+ *     summary: Get all flashcards
+ *     tags: [Flashcards]
+ *     responses:
+ *       200:
+ *         description: A list of flashcards
+ */
+
 // Get flashcards with search and filter options
 router.get('/flashcards', async (req, res) => {
     const { record_id, query } = req.query;
@@ -26,6 +44,39 @@ router.get('/flashcards', async (req, res) => {
 
     res.status(200).json({ flashcards: data });
 });
+
+/**
+ * @swagger
+ * /flashcards/flashcards:
+ *   post:
+ *     summary: Create a new flashcard
+ *     tags: [Flashcards]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [record_id, question, answer]
+ *             properties:
+ *               record_id:
+ *                 type: string
+ *                 description: ID of the related record
+ *               question:
+ *                 type: string
+ *               answer:
+ *                 type: string
+ *               hint:
+ *                 type: string
+ *                 nullable: true
+ *     responses:
+ *       201:
+ *         description: Flashcard created successfully
+ *       400:
+ *         description: Missing required fields
+ *       500:
+ *         description: Server error
+ */
 
 // Create a flashcard with sequential Flashcard_Num per Record_ID
 router.post('/flashcards', async (req, res) => {
@@ -80,6 +131,63 @@ router.post('/flashcards', async (req, res) => {
 // Get all flashcards for a record (you might not need this separate route anymore)
 // router.get('/flashcards/:record_id', async (req, res) => { ... });
 
+/**
+ * @swagger
+ * /flashcards/flashcards/{flashcard_num}/{record_id}:
+ *   patch:
+ *     summary: Update a flashcard
+ *     tags: [Flashcards]
+ *     parameters:
+ *       - in: path
+ *         name: flashcard_num
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Flashcard number to update
+ *       - in: path
+ *         name: record_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the associated record
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               question:
+ *                 type: string
+ *                 description: Updated question text
+ *               answer:
+ *                 type: string
+ *                 description: Updated answer text
+ *               hint:
+ *                 type: string
+ *                 description: Updated hint text
+ *             example:
+ *               question: What is 2 + 2?
+ *               answer: 4
+ *               hint: Think of pairs
+ *     responses:
+ *       200:
+ *         description: Flashcard updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: At least one field to update is required
+ *       500:
+ *         description: Internal server error
+ */
+
 router.patch('/flashcards/:flashcard_num/:record_id', async (req, res) => {
     const { flashcard_num, record_id } = req.params;
     const { question, answer, hint } = req.body;
@@ -107,6 +215,25 @@ router.patch('/flashcards/:flashcard_num/:record_id', async (req, res) => {
     res.status(200).json({ message: 'Flashcard updated', data });
   });  
 
+/**
+ * @swagger
+ * /flashcards/flashcards/{record_id}:
+ *  get:
+ *    summary: Get flashcards by record ID
+ *    tags: [Flashcards]
+ *    parameters:
+ *      - in: path
+ *        name: record_id
+ *        required: true
+ *        schema:
+ *          type: string
+ *    responses:
+ *      200:
+ *        description: List of flashcards for the specified record ID
+ *      500:
+ *        description: Server error
+ */
+
 // Get flashcards by record_id
 router.get('/flashcards/:record_id', async (req, res) => {
     const { record_id } = req.params;
@@ -121,6 +248,23 @@ router.get('/flashcards/:record_id', async (req, res) => {
     res.status(200).json({ data });
   });
   
+/**
+ * @swagger
+ * /flashcards/flashcards/{flashcard_num}:
+ *   delete:
+ *     summary: Delete a flashcard
+ *     tags: [Flashcards]
+ *     parameters:
+ *       - in: path
+ *         name: flashcard_num
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Flashcard ID
+ *     responses:
+ *       204:
+ *         description: Flashcard deleted
+ */
 
 // Delete a flashcard (remains the same)
 router.delete('/flashcards/:flashcard_num', async (req, res) => {
