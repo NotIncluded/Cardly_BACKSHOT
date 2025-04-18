@@ -244,6 +244,153 @@ router.post('/records/full/:user_id', async (req, res) => {
 
 /**
  * @swagger
+ * /records/records/full/{record_id}:
+ *   patch:
+ *     summary: Update record, cover, and individual flashcards
+ *     tags: [Record]
+ *     parameters:
+ *       - in: path
+ *         name: record_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the record to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [Private, Public]
+ *               category:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               questions:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     flashcard_num:
+ *                       type: integer
+ *                       description: Flashcard number to update
+ *                     question:
+ *                       type: string
+ *                     answer:
+ *                       type: string
+ *                     hint:
+ *                       type: string
+ *     responses:
+ *       200:
+ *         description: Record, Cover, and Flashcards updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 updatedFlashcards:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       400:
+ *         description: No updatable fields provided
+ *       500:
+ *         description: Server or database error
+ */
+
+// PATCH route to update Record, Cover, and individual Flashcards
+router.patch('/records/full/:record_id', async (req, res) => {
+  const { record_id } = req.params;
+  const { status, category, title, description, questions } = req.body;
+
+  // Validate: at least one field must be provided
+  if (!status && !category && !title && !description && !questions) {
+    return res.status(400).json({ error: 'At least one field is required for update' });
+  }
+
+  // Validate status if present
+  const allowedStatuses = ['Private', 'Public'];
+  if (status && !allowedStatuses.includes(status)) {
+    return res.status(400).json({ error: 'Status must be either "Private" or "Public"' });
+  }
+
+  // ---- Update Record Table ----
+  const recordUpdates = {};
+  if (status !== undefined) recordUpdates.Status = status;
+  if (category !== undefined) recordUpdates.Category = category;
+
+  if (Object.keys(recordUpdates).length > 0) {
+    const { error: recordError } = await supabase
+      .from('Record')
+      .update(recordUpdates)
+      .eq('Record_ID', record_id);
+
+    if (recordError) {
+      return res.status(500).json({ error: 'Failed to update record: ' + recordError.message });
+    }
+  }
+
+  // ---- Update Cover Table ----
+  const coverUpdates = {};
+  if (title !== undefined) coverUpdates.Title = title;
+  if (description !== undefined) coverUpdates.Description = description;
+
+  if (Object.keys(coverUpdates).length > 0) {
+    const { error: coverError } = await supabase
+      .from('Cover')
+      .update(coverUpdates)
+      .eq('Record_ID', record_id);
+
+    if (coverError) {
+      return res.status(500).json({ error: 'Failed to update cover: ' + coverError.message });
+    }
+  }
+
+  // ---- Update Flashcards Individually ----
+  let updatedFlashcards = [];
+  if (Array.isArray(questions)) {
+    for (const q of questions) {
+      if (!q.flashcard_num) continue; // Must provide flashcard_num to update
+
+      const flashcardUpdates = {};
+      if (q.question !== undefined) flashcardUpdates.Question = q.question;
+      if (q.answer !== undefined) flashcardUpdates.Answer = q.answer;
+      if (q.hint !== undefined) flashcardUpdates.Hint = q.hint;
+
+      if (Object.keys(flashcardUpdates).length > 0) {
+        const { data, error } = await supabase
+          .from('Flashcard')
+          .update(flashcardUpdates)
+          .eq('Record_ID', record_id)
+          .eq('Flashcard_Num', q.flashcard_num)
+          .select()
+          .single();
+
+        if (error) {
+          return res.status(500).json({ error: `Failed to update flashcard ${q.flashcard_num}: ${error.message}` });
+        }
+
+        updatedFlashcards.push(data);
+      }
+    }
+  }
+
+  // Response
+  return res.status(200).json({
+    message: 'Record, Cover, and Flashcards updated successfully',
+    updatedFlashcards
+  });
+});
+
+/**
+ * @swagger
  * /records/records/{record_id}:
  *   delete:
  *     summary: Delete a record
