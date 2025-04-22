@@ -107,7 +107,6 @@ router.post('/flashcards', async (req, res) => {
         .from('Flashcard')
         .insert([{
           Record_ID: record_id,
-          Flashcard_Num: nextFlashcardNum,
           Question: question,
           Answer: answer,
           Hint: hint,
